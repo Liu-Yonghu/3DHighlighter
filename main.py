@@ -74,16 +74,34 @@ def optimize(agrs):
         transforms.Resize((res, res)),
         clip_normalizer
     ])
-    augment_transform = transforms.Compose([
-        transforms.RandomResizedCrop(res, scale=(1, 1)),
-        transforms.RandomPerspective(fill=1, p=0.8, distortion_scale=0.5),
-        clip_normalizer
-    ])
-    
+
+    if args.n_augs == 1:
+        augment_transform = transforms.Compose([
+            transforms.RandomResizedCrop(res, scale=(1, 1)),
+            transforms.RandomPerspective(fill=1, p=0.8, distortion_scale=0.5),
+            clip_normalizer
+        ])
+    # data augmentation here for exploring the different convergence ability
+    elif args.n_augs == 2:
+        augment_transform = transforms.Compose([
+            transforms.RandomResizedCrop(res, scale=(1, 1)),
+            transforms.GaussianBlur(kernel_size=5, sigma=(0.1, 2)),
+            clip_normalizer
+        ])
+    else:
+        augment_transform = transforms.Compose([
+            transforms.RandomResizedCrop(res, scale=(1, 1)),
+            transforms.Lambda(lambda res: add_gaussian_noise(res, std=0.05)),
+            clip_normalizer
+        ])
+
     # MLP Settings
     mlp = NeuralHighlighter(args.depth, args.width, out_dim=args.n_classes, positional_encoding=args.positional_encoding,
                             sigma=args.sigma).to(device)
     optim = torch.optim.Adam(mlp.parameters(), args.learning_rate)
+
+    #vertices = copy.deepcopy(mesh.vertices)
+    #pred_class = mlp(vertices)
 
     # list of possible colors
     rgb_to_color = {(204/255, 1., 0.): "highlighter", (180/255, 180/255, 180/255): "gray"}
@@ -117,6 +135,8 @@ def optimize(agrs):
         # color and render mesh
         sampled_mesh = mesh
         color_mesh(pred_class, sampled_mesh, colors)
+
+        #here the sampled_mesh has been colored
         rendered_images, elev, azim = render.render_views(sampled_mesh, num_views=args.n_views,
                                                                 show=args.show,
                                                                 center_azim=args.frontview_center[0],
@@ -203,18 +223,17 @@ def clip_loss(args, rendered_images, encoded_text, clip_transform, augment_trans
             loss = torch.mean(torch.cosine_similarity(encoded_renders, encoded_text))
     elif args.n_augs > 0:
         loss = 0.0
-        for _ in range(args.n_augs):
-            augmented_image = augment_transform(rendered_images)
-            encoded_renders = clip_model.encode_image(augmented_image)
-            if args.clipavg == "view":
-                if encoded_text.shape[0] > 1:
-                    loss -= torch.cosine_similarity(torch.mean(encoded_renders, dim=0),
+        augmented_image = augment_transform(rendered_images)
+        encoded_renders = clip_model.encode_image(augmented_image)
+        if args.clipavg == "view":
+            if encoded_text.shape[0] > 1:
+                loss -= torch.cosine_similarity(torch.mean(encoded_renders, dim=0),
                                                     torch.mean(encoded_text, dim=0), dim=0)
-                else:
-                    loss -= torch.cosine_similarity(torch.mean(encoded_renders, dim=0, keepdim=True),
-                                                    encoded_text)
             else:
-                loss -= torch.mean(torch.cosine_similarity(encoded_renders, encoded_text))
+                loss -= torch.cosine_similarity(torch.mean(encoded_renders, dim=0, keepdim=True),
+                                                    encoded_text)
+        else:
+            loss -= torch.mean(torch.cosine_similarity(encoded_renders, encoded_text))
     return loss
 
 def save_renders(dir, i, rendered_images, name=None):
@@ -223,6 +242,14 @@ def save_renders(dir, i, rendered_images, name=None):
     else:
         torchvision.utils.save_image(rendered_images, os.path.join(dir, 'renders/iter_{}.jpg'.format(i)))
 
+
+# generate the gaussian noise for data augmentation
+def add_gaussian_noise(res, mean=0.0, std=0.1):
+    noise = torch.randn_like(res) * std + mean
+    noisy_res = res + noise
+    return torch.clamp(noisy_res, 0, 1)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
@@ -230,7 +257,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=0)
 
     # directory structure
-    parser.add_argument('--obj_path', type=str, default='data/scenes/scene.obj')
+    parser.add_argument('--obj_path', type=str, default='data/candle.obj')
     parser.add_argument('--output_dir', type=str, default='results/segment/1')
 
     # mesh+prompt info
