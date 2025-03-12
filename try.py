@@ -54,3 +54,5 @@ print(single_object.keys())
 single_object["coordinates"] = torch.tensor(single_object["coordinates"]).unsqueeze(0)
 print(single_object["coordinates"].shape)
 voxel = point_to_voxel(single_object['coordinates'])
+
+print(voxel)

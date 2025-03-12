@@ -86,9 +86,9 @@ def generate_clip_sentences(semantic_class, labels):
 
 
 
-def point_to_voxel(coordinate, resolution=32):
+def point_to_voxel(coordinate, resolution=3):
     if coordinate is not None:
-        #coordinate = torch.tensor(coordinate).unsqueeze(0)
+        coordinate = (coordinate - coordinate.min()) / (coordinate.max() - coordinate.min())
         voxel_object = kal.ops.conversions.pointclouds_to_voxelgrids(pointclouds=coordinate, resolution=resolution)
     else:
         print("the coordinate is not useful")
