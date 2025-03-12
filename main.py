@@ -295,6 +295,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.voxel:
-        vertices, faces, args = create_voxel_mesh(args)
-
+        args = create_voxel_mesh(args)
     optimize(args)
