@@ -3,9 +3,10 @@ import os
 import math
 import torch
 import trimesh
+from pathlib import Path
 
 from converter import generate_clip_sentences, point_to_voxel, voxel_to_meshs
-from random import random
+import random
 from converter import AffordNetDataset
 
 
@@ -18,7 +19,7 @@ def create_voxel_mesh(args):
     print(data[0].keys())
 
     save_path = (os.path.join(data_dir, 'data_from_voxel'))
-    os.mkdirs(save_path, exist_ok=True)
+    Path(save_path).mkdir(parents=True, exist_ok=True)
 
     random.seed(args.seed)
     rand_index = random.randint(0, len(data)-1)
@@ -42,7 +43,6 @@ def create_voxel_mesh(args):
 
     #obj.export_obj(save_path, vertices, faces)
     #print(f"OBJ saved under: {save_path}")
-
 
 
 

@@ -21,7 +21,7 @@ from tqdm import tqdm
 from torch.autograd import grad
 from torchvision import transforms
 from utils import device, color_mesh
-import create_voxel_mesh
+from create_voxel_mesh import create_voxel_mesh
 
 
 def optimize(agrs):
@@ -254,7 +254,7 @@ def add_gaussian_noise(res, mean=0.0, std=0.1):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--voxel',type=str,  default=False)
+    parser.add_argument('--voxel',type=str,  default=True)
     # general
     parser.add_argument('--seed', type=int, default=0)
 
