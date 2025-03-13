@@ -79,7 +79,7 @@ def generate_clip_sentences(semantic_class, labels):
     if semantic_class:
         clip_texts = []
         for label in labels:
-            clip_text = [f"A 3D render of {semantic_class.lower()} with {affordance_descriptions.get(label, f'a highlighted {label}')}"]
+            clip_text = f"A 3D render of {semantic_class.lower()} with {affordance_descriptions.get(label, f'a highlighted {label}')}"
             clip_texts.append(clip_text)
 
     return clip_texts
@@ -94,6 +94,39 @@ def point_to_voxel(coordinate, resolution=3):
         print("the coordinate is not useful")
     return voxel_object
 
+
 def voxel_to_meshs(voxtel_object):
     vertices, faces = kal.ops.conversions.voxelgrids_to_trianglemeshes(voxtel_object)
-    return vertices, faces
+
+    vertices = vertices[0].squeeze(0)  # (34, 3)
+    faces = faces[0].squeeze(0)  # (64, 3)
+
+    face_vertices = vertices[faces]  # (64, 3, 3)
+    face_vertices = face_vertices.unsqueeze(0)
+
+    face_normals = kal.ops.mesh.face_normals(face_vertices, unit=True)
+
+    face_normals = face_normals.unsqueeze(3).repeat(1, 1, 1, 3)
+    print(f"faces shape: {faces.shape}")
+    print(f"face_normals shape: {face_normals.shape}")
+
+    vertex_normals = kal.ops.mesh.compute_vertex_normals(faces, face_normals, len(vertices))
+
+    vertex_normals = vertex_normals[0].squeeze(0)
+
+    return vertices, faces, vertex_normals
+
+
+def save_obj(filepath, vertices, vertex_normals, faces):
+
+    with open(filepath, 'w') as f:
+        for v in vertices:
+            f.write(f"v {v[0]} {v[1]} {v[2]}\n")
+        for vn in vertex_normals:
+            f.write(f"vn {vn[0]} {vn[1]} {vn[2]}\n")
+
+        for face in faces:
+            f.write(f"f {face[0]+1}//{face[0]+1} {face[1]+1}//{face[1]+1} {face[2]+1}//{face[2]+1}\n")
+
+
+

@@ -8,9 +8,10 @@ import trimesh
 from utils import device
 from pathlib import Path
 
-from converter import generate_clip_sentences, point_to_voxel, voxel_to_meshs
 import random
 from converter import AffordNetDataset
+from converter import generate_clip_sentences, point_to_voxel, voxel_to_meshs, save_obj
+
 
 
 def create_voxel_from_mesh(args):
@@ -41,21 +42,29 @@ def create_voxel_from_mesh(args):
     print("Coordinates Device:", coordinates.device)
 
     voxel = point_to_voxel(coordinates).to(device)
-    vertices, faces = voxel_to_meshs(voxel)
 
-    vertices = vertices[0].squeeze(0)  # shape to (64, 3)
+    vertices, faces, vertex_normals = voxel_to_meshs(voxel)
+
+    #vertices = vertices[0].squeeze(0)  # shape to (34, 3)
     vertices_ = vertices.cpu().numpy()
-    faces = faces[0].squeeze(0)  # shape to  (64, 3)
+    #faces = faces[0].squeeze(0)  # shape to  (64, 3)
     faces_ = faces.cpu().numpy()
+
+    vertex_normals_ = vertex_normals.cpu().numpy()
 
     mesh = trimesh.Trimesh(vertices=vertices_, faces=faces_)
 
     obj_file_path = os.path.join(save_path, f"{single_object['semantic_class']}.obj")
-    mesh.export(obj_file_path)
+    #mesh.export(obj_file_path)
+
+    save_obj(obj_file_path, vertices_, vertex_normals_, faces_)
+
     print(f"Mesh saved at: {obj_file_path}")
 
     args.object = single_object['semantic_class']
-    args.classes = single_object['labels']
-    args.prompt = clip_texts
+    labels = single_object['labels']
 
-    return args
+    # args.classes = single_object['labels']
+    # args.prompt = clip_texts
+
+    return args, clip_texts, obj_file_path, labels

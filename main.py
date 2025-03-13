@@ -21,10 +21,10 @@ from tqdm import tqdm
 from torch.autograd import grad
 from torchvision import transforms
 from utils import device, color_mesh
-from create_voxel_mesh import create_voxel_mesh
+from voxel_mesh import create_voxel_from_mesh
 
 
-def optimize(agrs):
+def optimize(args):
     # Constrain most sources of randomness
     # (some torch backwards functions within CLIP are non-determinstic)
     torch.manual_seed(args.seed)
@@ -113,11 +113,11 @@ def optimize(agrs):
     
     # --- Prompt ---
     # pre-process multi_word_inputs
-    args.object[0] = ' '.join(args.object[0].split('_'))
-    for i in range(len(args.classes)):
-        args.classes[i] = ' '.join(args.classes[i].split('_'))
+    # args.object[0] = ' '.join(args.object[0].split('_'))
+    # for i in range(len(args.classes)):
+    #     args.classes[i] = ' '.join(args.classes[i].split('_'))
     # encode prompt with CLIP
-    prompt = "A 3D render of a gray {} with highlighted {}".format(args.object[0], args.classes[0])
+    prompt = args.prompt
     with torch.no_grad():
         prompt_token = clip.tokenize([prompt]).to(device)
         encoded_text = clip_model.encode_text(prompt_token)
@@ -295,5 +295,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.voxel:
-        args = create_voxel_mesh(args)
-    optimize(args)
+        args, clip_text, obj_file_path, labels = create_voxel_from_mesh(args)
+        args.obj_path = obj_file_path
+        for i in range(len(labels)):
+            args.classes = labels[i]
+            args.prompt = clip_text[i]
+            print(args)
+            optimize(args)
