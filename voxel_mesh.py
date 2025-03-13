@@ -39,12 +39,9 @@ def create_voxel_from_mesh(args):
 
     coordinates = torch.tensor(single_object['coordinates']).unsqueeze(0)
     print("Coordinates Shape:", coordinates.shape)
-    print("Coordinates Device:", coordinates.device)
 
     voxel = point_to_voxel(coordinates).to(device)
-
     vertices, faces, vertex_normals = voxel_to_meshs(voxel)
-
     #vertices = vertices[0].squeeze(0)  # shape to (34, 3)
     vertices_ = vertices.cpu().numpy()
     #faces = faces[0].squeeze(0)  # shape to  (64, 3)

@@ -300,4 +300,5 @@ if __name__ == '__main__':
         for i in range(len(labels)):
             args.classes = labels[i]
             args.prompt = clip_text[i]
+            args.out_dir = f'voxel_results/demo_{args.object}_{labels[i]}'
             optimize(args)
