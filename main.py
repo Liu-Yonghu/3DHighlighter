@@ -22,6 +22,7 @@ from torch.autograd import grad
 from torchvision import transforms
 from utils import device, color_mesh
 from voxel_mesh import create_voxel_from_mesh
+from approximate_mesh import create_appro_mesh
 
 
 def optimize(args):
@@ -254,7 +255,7 @@ def add_gaussian_noise(res, mean=0.0, std=0.1):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--voxel',type=str,  default=True)
+
     # general
     parser.add_argument('--seed', type=int, default=0)
 
@@ -292,6 +293,11 @@ if __name__ == '__main__':
     parser.add_argument('--learning_rate', type=float, default=0.0001)
     parser.add_argument('--n_iter', type=int, default=2500)
 
+    # addition parameter
+
+    parser.add_argument('--voxel', type=str, default=False)  # voxel
+    parser.add_argument('--appro_mesh', type=str, default=False)  # appro_mesh
+
     args = parser.parse_args()
 
     if args.voxel:
@@ -302,3 +308,14 @@ if __name__ == '__main__':
             args.prompt = clip_text[i]
             args.out_dir = f'voxel_results/demo_{args.object}_{labels[i]}'
             optimize(args)
+
+    if args.appro_mesh:
+        args, clip_text, obj_file_path, labels = create_appro_mesh(args)
+        args.obj_path = obj_file_path
+        for i in range(len(labels)):
+            args.classes = labels[i]
+            args.prompt = clip_text[i]
+            args.out_dir = f'appro_mesh_results/demo_{args.object}_{labels[i]}'
+            optimize(args)
+
+

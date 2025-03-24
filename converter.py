@@ -4,6 +4,7 @@ import os.path
 import torch
 import numpy as np
 import kaolin as kal
+import open3d as o3d
 
 affordance_descriptions = {
             "grasp": "a highlighted handle for grasping",
@@ -49,7 +50,9 @@ class AffordNetDataset(Dataset):
             temp_info["semantic_class"] = info[n_arr[1]]
             temp_info["affordance"] = info[n_arr[2]]
             temp_info["data_info"] = info[n_arr[3]]
-            temp_info["coordinates"] = info[n_arr[3]]['coordinate']
+
+            tem_str = [info[n_arr[3]].keys()]
+            temp_info["coordinates"] = info[n_arr[3]][tem_str[0]]
             temp_info["labels"] = filter_non_zero_entries(info[n_arr[3]]['label'])
             self.all_data.append(temp_info)
 
@@ -86,7 +89,7 @@ def generate_clip_sentences(semantic_class, labels):
 
 
 
-def point_to_voxel(coordinate, resolution=64):
+def point_to_voxel(coordinate, resolution=128):
     if coordinate is not None:
         coordinate = (coordinate - coordinate.min()) / (coordinate.max() - coordinate.min())
         voxel_object = kal.ops.conversions.pointclouds_to_voxelgrids(pointclouds=coordinate, resolution=resolution)
@@ -115,6 +118,16 @@ def voxel_to_meshs(voxtel_object):
     vertex_normals = vertex_normals[0].squeeze(0)
 
     return vertices, faces, vertex_normals
+
+def point_appro_meshs(coordinate, obj_file_path, alpha=0.3):
+
+    point_colud = o3d.geometry.PointCloud(coordinate)
+    mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(point_colud, alpha)
+    mesh.compute_vertex_normals()
+
+    o3d.io.write_triangle_mesh(obj_file_path, mesh)
+    print(f"Mesh saved at: {obj_file_path}")
+
 
 
 def save_obj(filepath, vertices, vertex_normals, faces):
