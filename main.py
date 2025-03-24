@@ -306,7 +306,7 @@ if __name__ == '__main__':
         for i in range(len(labels)):
             args.classes = labels[i]
             args.prompt = clip_text[i]
-            args.out_dir = f'voxel_results/demo_{args.object}_{labels[i]}'
+            args.output_dir = f'voxel_results/demo_{args.object}_{labels[i]}'
             optimize(args)
 
     if args.appro_mesh:
@@ -315,7 +315,7 @@ if __name__ == '__main__':
         for i in range(len(labels)):
             args.classes = labels[i]
             args.prompt = clip_text[i]
-            args.out_dir = f'appro_mesh_results/demo_{args.object}_{labels[i]}'
+            args.output_dir = f'appromesh_results/demo_{args.object}_{labels[i]}'
             optimize(args)
 
 

@@ -33,7 +33,7 @@ def create_appro_mesh(args):
 
     clip_texts = generate_clip_sentences(single_object['semantic_class'], single_object['labels'])
 
-    coordinates = torch.tensor(single_object['coordinates']).unsqueeze(0)
+    coordinates = torch.tensor(single_object['coordinates'])
     print("Coordinates Shape:", coordinates.shape)
 
     obj_file_path = os.path.join(save_path, f"{single_object['semantic_class']}.obj")

@@ -50,9 +50,8 @@ class AffordNetDataset(Dataset):
             temp_info["semantic_class"] = info[n_arr[1]]
             temp_info["affordance"] = info[n_arr[2]]
             temp_info["data_info"] = info[n_arr[3]]
+            temp_info["coordinates"] = info[n_arr[3]]['coordinate']
 
-            tem_str = [info[n_arr[3]].keys()]
-            temp_info["coordinates"] = info[n_arr[3]][tem_str[0]]
             temp_info["labels"] = filter_non_zero_entries(info[n_arr[3]]['label'])
             self.all_data.append(temp_info)
 
@@ -99,35 +98,45 @@ def point_to_voxel(coordinate, resolution=128):
 
 
 def voxel_to_meshs(voxtel_object):
-    vertices, faces = kal.ops.conversions.voxelgrids_to_trianglemeshes(voxtel_object)
 
-    vertices = vertices[0].squeeze(0)  # (34, 3)
-    faces = faces[0].squeeze(0)  # (64, 3)
+    try:
+        vertices, faces = kal.ops.conversions.voxelgrids_to_trianglemeshes(voxtel_object)
 
-    face_vertices = vertices[faces]  # (64, 3, 3)
-    face_vertices = face_vertices.unsqueeze(0)
+        vertices = vertices[0].squeeze(0)  # (34, 3)
+        faces = faces[0].squeeze(0)  # (64, 3)
 
-    face_normals = kal.ops.mesh.face_normals(face_vertices, unit=True)
+        face_vertices = vertices[faces]  # (64, 3, 3)
+        face_vertices = face_vertices.unsqueeze(0)
 
-    face_normals = face_normals.unsqueeze(3).repeat(1, 1, 1, 3)
-    print(f"faces shape: {faces.shape}")
-    print(f"face_normals shape: {face_normals.shape}")
+        face_normals = kal.ops.mesh.face_normals(face_vertices, unit=True)
 
-    vertex_normals = kal.ops.mesh.compute_vertex_normals(faces, face_normals, len(vertices))
+        face_normals = face_normals.unsqueeze(3).repeat(1, 1, 1, 3)
+        print(f"faces shape: {faces.shape}")
+        print(f"face_normals shape: {face_normals.shape}")
 
-    vertex_normals = vertex_normals[0].squeeze(0)
+        vertex_normals = kal.ops.mesh.compute_vertex_normals(faces, face_normals, len(vertices))
 
-    return vertices, faces, vertex_normals
+        vertex_normals = vertex_normals[0].squeeze(0)
 
-def point_appro_meshs(coordinate, obj_file_path, alpha=0.3):
+        return vertices, faces, vertex_normals
 
-    point_colud = o3d.geometry.PointCloud(coordinate)
-    mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(point_colud, alpha)
-    mesh.compute_vertex_normals()
+    except Exception as e:
+        print(f"voxel Mesh failed to create: {e}")
 
-    o3d.io.write_triangle_mesh(obj_file_path, mesh)
-    print(f"Mesh saved at: {obj_file_path}")
 
+def point_appro_meshs(coordinate, obj_file_path, alpha=0.03):
+
+    try:
+        point_colud = o3d.geometry.PointCloud()
+        point_colud.points = o3d.utility.Vector3dVector(coordinate)
+
+        mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(point_colud, alpha)
+        mesh.compute_vertex_normals()
+
+        o3d.io.write_triangle_mesh(obj_file_path, mesh)
+        print(f"Mesh saved at: {obj_file_path}")
+    except Exception as e:
+        print(f"Mesh failed to save at: {obj_file_path}: {e}")
 
 
 def save_obj(filepath, vertices, vertex_normals, faces):
