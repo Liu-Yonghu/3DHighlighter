@@ -307,15 +307,20 @@ if __name__ == '__main__':
             args.classes = labels[i]
             args.prompt = clip_text[i]
             args.output_dir = f'voxel_results/demo_{args.object}_{labels[i]}'
+            print(args.prompt)
             optimize(args)
 
-    if args.appro_mesh:
+    elif args.appro_mesh:
         args, clip_text, obj_file_path, labels = create_appro_mesh(args)
         args.obj_path = obj_file_path
         for i in range(len(labels)):
             args.classes = labels[i]
             args.prompt = clip_text[i]
             args.output_dir = f'appromesh_results/demo_{args.object}_{labels[i]}'
+            print(args.prompt)
             optimize(args)
+
+    else:
+        optimize(args)
 
 

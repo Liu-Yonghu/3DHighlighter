@@ -4,7 +4,6 @@ import math
 
 import numpy as np
 import torch
-import trimesh
 from utils import device
 from pathlib import Path
 
@@ -49,7 +48,7 @@ def create_voxel_from_mesh(args):
 
     vertex_normals_ = vertex_normals.cpu().numpy()
 
-    mesh = trimesh.Trimesh(vertices=vertices_, faces=faces_)
+    #mesh = trimesh.Trimesh(vertices=vertices_, faces=faces_)
 
     obj_file_path = os.path.join(save_path, f"{single_object['semantic_class']}.obj")
     #mesh.export(obj_file_path)

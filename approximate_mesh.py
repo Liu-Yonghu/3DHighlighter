@@ -1,6 +1,3 @@
-from affload import PklLoader
-
-from utils import device
 from pathlib import Path
 
 import os
@@ -21,7 +18,7 @@ def create_appro_mesh(args):
 
     print(data[0].keys())
 
-    save_path = (os.path.join(data_dir, 'data_from_voxel'))
+    save_path = (os.path.join(data_dir, 'data_from_appro'))
     Path(save_path).mkdir(parents=True, exist_ok=True)
 
     random.seed(args.seed)

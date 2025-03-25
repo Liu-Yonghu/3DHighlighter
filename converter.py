@@ -88,7 +88,7 @@ def generate_clip_sentences(semantic_class, labels):
 
 
 
-def point_to_voxel(coordinate, resolution=128):
+def point_to_voxel(coordinate, resolution=64):
     if coordinate is not None:
         coordinate = (coordinate - coordinate.min()) / (coordinate.max() - coordinate.min())
         voxel_object = kal.ops.conversions.pointclouds_to_voxelgrids(pointclouds=coordinate, resolution=resolution)
