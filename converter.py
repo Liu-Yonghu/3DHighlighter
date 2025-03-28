@@ -124,7 +124,7 @@ def voxel_to_meshs(voxtel_object):
         print(f"voxel Mesh failed to create: {e}")
 
 
-def point_appro_meshs(coordinate, obj_file_path, alpha=0.03):
+def point_appro_meshs(coordinate, obj_file_path, alpha=0.037):
 
     try:
         point_colud = o3d.geometry.PointCloud()

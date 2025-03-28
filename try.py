@@ -61,3 +61,4 @@ print("create successfully")
 # voxel = point_to_voxel(single_object['coordinates'])
 #
 # print(voxel)
+
